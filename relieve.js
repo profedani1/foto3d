@@ -1,3 +1,6 @@
+// relieve.js
+import { setupControls, getCameraMatrix } from './controls.js';
+
 export default function startReliefApp() {
   const canvas = document.getElementById("glcanvas");
   const gl = canvas.getContext("webgl");
@@ -66,109 +69,8 @@ export default function startReliefApp() {
       0, 0, 2 * far * near * nf, 0
     ]);
   }
-  function normalize(v) {
-    const len = Math.sqrt(v[0] ** 2 + v[1] ** 2 + v[2] ** 2);
-    return [v[0] / len, v[1] / len, v[2] / len];
-  }
-  function cross(a, b) {
-    return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
-  }
-  function subtract(a, b) {
-    return [a[0]-b[0], a[1]-b[1], a[2]-b[2]];
-  }
-  function dot(a, b) {
-    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
-  }
-  function lookAt(eye, center, up) {
-    const f = normalize(subtract(center, eye));
-    const s = normalize(cross(f, up));
-    const u = cross(s, f);
-    return new Float32Array([
-      s[0], u[0], -f[0], 0,
-      s[1], u[1], -f[1], 0,
-      s[2], u[2], -f[2], 0,
-      -dot(s, eye), -dot(u, eye), dot(f, eye), 1,
-    ]);
-  }
 
-  let camPos = [0, 0, 70], camYaw = 0, camPitch = 0;
-  let camPosTarget = [...camPos];
-  const camPitchLimit = Math.PI / 2 - 0.01;
-  const moveSpeed = 0.5, camMouseSensitivity = 0.003;
-  const keys = {};
-  let mousePos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-  let isDragging = false, lastMouse = { x: 0, y: 0 };
-
-  window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
-  window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
-  canvas.addEventListener("mousedown", e => {
-    isDragging = true;
-    lastMouse.x = e.clientX;
-    lastMouse.y = e.clientY;
-    canvas.style.cursor = "grabbing";
-  });
-  canvas.addEventListener("mouseup", () => {
-    isDragging = false;
-    canvas.style.cursor = "grab";
-  });
-  canvas.addEventListener("mousemove", e => {
-    mousePos.x = e.clientX;
-    mousePos.y = e.clientY;
-    if (isDragging) {
-      const dx = e.clientX - lastMouse.x;
-      const dy = e.clientY - lastMouse.y;
-      camYaw -= dx * camMouseSensitivity;
-      camPitch -= dy * camMouseSensitivity;
-      camPitch = Math.max(-camPitchLimit, Math.min(camPitch, camPitch));
-      lastMouse = { x: e.clientX, y: e.clientY };
-    }
-  });
-  canvas.addEventListener("wheel", e => {
-    e.preventDefault();
-    const zoomAmount = -e.deltaY * 0.1;
-    const fx = Math.cos(camPitch) * Math.sin(camYaw);
-    const fy = Math.sin(camPitch);
-    const fz = Math.cos(camPitch) * Math.cos(camYaw);
-    camPosTarget[0] += fx * zoomAmount;
-    camPosTarget[1] += fy * zoomAmount;
-    camPosTarget[2] += fz * zoomAmount;
-  }, { passive: false });
-
-  const edgeSize = 150, autoLookSpeed = 0.02;
-  function autoRotateByMouse() {
-    if (isDragging) return;
-    if (mousePos.x < edgeSize)
-      camYaw += autoLookSpeed * ((edgeSize - mousePos.x) / edgeSize);
-    else if (mousePos.x > window.innerWidth - edgeSize)
-      camYaw -= autoLookSpeed * ((mousePos.x - (window.innerWidth - edgeSize)) / edgeSize);
-    if (mousePos.y < edgeSize)
-      camPitch += autoLookSpeed * ((edgeSize - mousePos.y) / edgeSize);
-    else if (mousePos.y > window.innerHeight - edgeSize)
-      camPitch -= autoLookSpeed * ((mousePos.y - (window.innerHeight - edgeSize)) / edgeSize);
-    camPitch = Math.max(-camPitchLimit, Math.min(camPitch, camPitch));
-  }
-
-  function moveCamera() {
-    const forward = [Math.cos(camPitch)*Math.sin(camYaw), 0, Math.cos(camPitch)*Math.cos(camYaw)];
-    const right = [Math.sin(camYaw - Math.PI/2), 0, Math.cos(camYaw - Math.PI/2)];
-    if (keys['w']) { camPosTarget[0] += forward[0]*moveSpeed; camPosTarget[2] += forward[2]*moveSpeed; }
-    if (keys['s']) { camPosTarget[0] -= forward[0]*moveSpeed; camPosTarget[2] -= forward[2]*moveSpeed; }
-    if (keys['a']) { camPosTarget[0] -= right[0]*moveSpeed; camPosTarget[2] -= right[2]*moveSpeed; }
-    if (keys['d']) { camPosTarget[0] += right[0]*moveSpeed; camPosTarget[2] += right[2]*moveSpeed; }
-    if (keys[' ']) camPosTarget[1] += moveSpeed;
-    if (keys['shift']) camPosTarget[1] -= moveSpeed;
-    for (let i = 0; i < 3; i++) {
-      camPosTarget[i] = Math.min(200, Math.max(-200, camPosTarget[i]));
-      camPos[i] += (camPosTarget[i] - camPos[i]) * 0.1;
-    }
-  }
-
-  function createViewMatrix(pos, yaw, pitch) {
-    const cx = Math.cos(pitch) * Math.sin(yaw);
-    const cy = Math.sin(pitch);
-    const cz = Math.cos(pitch) * Math.cos(yaw);
-    return lookAt(pos, [pos[0]+cx, pos[1]+cy, pos[2]+cz], [0,1,0]);
-  }
+  setupControls(canvas);
 
   let posBuffer = null, colBuffer = null, pointsCount = 0;
   function updateBuffers(positions, colors) {
@@ -220,10 +122,8 @@ export default function startReliefApp() {
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
-    moveCamera();
-    autoRotateByMouse();
-    const mvMatrix = createViewMatrix(camPos, camYaw, camPitch);
-    gl.uniformMatrix4fv(uMVMatrixLoc, false, mvMatrix);
+    const camMat = getCameraMatrix();
+    gl.uniformMatrix4fv(uMVMatrixLoc, false, camMat);
     const pMatrix = perspectiveMatrix((45*Math.PI)/180, canvas.width/canvas.height, 0.1, 1000);
     gl.uniformMatrix4fv(uPMatrixLoc, false, pMatrix);
     gl.drawArrays(gl.POINTS, 0, pointsCount);
