@@ -122,7 +122,9 @@ export default function startReliefApp() {
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
-    const camMat = getCameraMatrix();
+moveCamera();
+autoRotateByMouse();
+const camMat = createViewMatrix();
     gl.uniformMatrix4fv(uMVMatrixLoc, false, camMat);
     const pMatrix = perspectiveMatrix((45*Math.PI)/180, canvas.width/canvas.height, 0.1, 1000);
     gl.uniformMatrix4fv(uPMatrixLoc, false, pMatrix);
@@ -139,4 +141,5 @@ export default function startReliefApp() {
   gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
   render();
 }
+
 
