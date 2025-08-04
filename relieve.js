@@ -145,8 +145,8 @@ window.addEventListener("resize", () => {
 });
 
 window.dispatchEvent(new Event("resize"));
-gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
 render();} 
+
 
 
 
