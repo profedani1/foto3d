@@ -1,4 +1,3 @@
-// controls.js
 let camPos = [0, 0, 70];
 let camYaw = 0, camPitch = 0;
 let camPosTarget = [...camPos];
@@ -10,37 +9,53 @@ const keys = {};
 let mousePos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 let isDragging = false;
 let lastMouse = { x: 0, y: 0 };
+let isLocked = false;
+let mouseButtons = new Set();
 
 function setupControls(canvas) {
   window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
   window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
   canvas.addEventListener("mousedown", e => {
-    isDragging = true;
-    lastMouse = { x: e.clientX, y: e.clientY };
-    canvas.style.cursor = "grabbing";
+    mouseButtons.add(e.button);
+    if (mouseButtons.has(0) && mouseButtons.has(2)) {
+      isLocked = true;
+      canvas.style.cursor = "not-allowed";
+    } else {
+      isDragging = true;
+      lastMouse = { x: e.clientX, y: e.clientY };
+      canvas.style.cursor = "grabbing";
+    }
   });
 
-  canvas.addEventListener("mouseup", () => {
-    isDragging = false;
-    canvas.style.cursor = "grab";
+  canvas.addEventListener("mouseup", e => {
+    mouseButtons.delete(e.button);
+    if (!(mouseButtons.has(0) && mouseButtons.has(2))) {
+      isLocked = false;
+      isDragging = false;
+      canvas.style.cursor = "grab";
+    }
+  });
+
+  canvas.addEventListener("contextmenu", e => {
+    e.preventDefault(); // Evita menú contextual
   });
 
   canvas.addEventListener("mousemove", e => {
     mousePos = { x: e.clientX, y: e.clientY };
-    if (isDragging) {
+    if (isDragging && !isLocked) {
       const dx = e.clientX - lastMouse.x;
       const dy = e.clientY - lastMouse.y;
       camYaw -= dx * camMouseSensitivity;
       camPitch -= dy * camMouseSensitivity;
-      camPitch = Math.max(-camPitchLimit, Math.min(camPitch, camPitch));
+      camPitch = Math.max(-camPitchLimit, Math.min(camPitchLimit, camPitch));
       lastMouse = { x: e.clientX, y: e.clientY };
     }
   });
 
   canvas.addEventListener("wheel", e => {
     e.preventDefault();
-    const zoom = -e.deltaY * 0.1;
+    const zoom = -e.deltaY * 0.02; // Zoom más suave
     const fx = Math.cos(camPitch) * Math.sin(camYaw);
     const fy = Math.sin(camPitch);
     const fz = Math.cos(camPitch) * Math.cos(camYaw);
@@ -68,19 +83,21 @@ function moveCamera() {
 }
 
 const edgeSize = 150;
-const autoLookSpeed = 0.02;
 
-function autoRotateByMouse() {
-  if (isDragging) return;
-  if (mousePos.x < edgeSize)
-    camYaw += autoLookSpeed * ((edgeSize - mousePos.x) / edgeSize);
-  else if (mousePos.x > window.innerWidth - edgeSize)
-    camYaw -= autoLookSpeed * ((mousePos.x - (window.innerWidth - edgeSize)) / edgeSize);
-  if (mousePos.y < edgeSize)
-    camPitch += autoLookSpeed * ((edgeSize - mousePos.y) / edgeSize);
-  else if (mousePos.y > window.innerHeight - edgeSize)
-    camPitch -= autoLookSpeed * ((mousePos.y - (window.innerHeight - edgeSize)) / edgeSize);
-  camPitch = Math.max(-camPitchLimit, Math.min(camPitch, camPitch));
+function moveCameraByMouseEdges() {
+  if (isDragging || isLocked) return;
+
+  if (mousePos.x < edgeSize) {
+    camPosTarget[0] -= moveSpeed; // Mover a la izquierda (X-)
+  } else if (mousePos.x > window.innerWidth - edgeSize) {
+    camPosTarget[0] += moveSpeed; // Mover a la derecha (X+)
+  }
+
+  if (mousePos.y < edgeSize) {
+    camPosTarget[1] += moveSpeed; // Subir (Y+)
+  } else if (mousePos.y > window.innerHeight - edgeSize) {
+    camPosTarget[1] -= moveSpeed; // Bajar (Y-)
+  }
 }
 
 function createViewMatrix(pos = camPos, yaw = camYaw, pitch = camPitch) {
@@ -123,6 +140,6 @@ function lookAt(eye, center, up) {
 export {
   setupControls,
   moveCamera,
-  autoRotateByMouse,
+  moveCameraByMouseEdges,
   createViewMatrix
 };
