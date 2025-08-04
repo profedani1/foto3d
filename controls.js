@@ -1,6 +1,6 @@
 let camPos = [0, 0, 70];
 let camYaw = 0, camPitch = 0;
-let camPosTarget = [...camPos];
+let camPosTarget = [...camPos];  // ← CORREGIDO
 const camPitchLimit = Math.PI / 2 - 0.01;
 const moveSpeed = 0.5;
 const camMouseSensitivity = 0.003;
@@ -11,7 +11,6 @@ let isDragging = false;
 let lastMouse = { x: 0, y: 0 };
 let isLocked = false;
 let mouseButtons = new Set();
-
 function setupControls(canvas) {
   window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
   window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
@@ -143,5 +142,6 @@ export {
   moveCameraByMouseEdges,  // <-- Esto debe estar
   createViewMatrix
 };
+
 
 
