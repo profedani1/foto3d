@@ -140,6 +140,8 @@ function lookAt(eye, center, up) {
 export {
   setupControls,
   moveCamera,
-  moveCameraByMouseEdges,
+  moveCameraByMouseEdges,  // <-- Esto debe estar
   createViewMatrix
 };
+
+
