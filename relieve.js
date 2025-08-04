@@ -126,6 +126,8 @@ function render() {
   moveCamera();
   moveCameraByMouseEdges();
 
+  gl.useProgram(program); // ✅ NECESARIO antes de usar uniforms
+
   const camMat = createViewMatrix();
   gl.uniformMatrix4fv(uMVMatrixLoc, false, camMat);
 
@@ -135,16 +137,16 @@ function render() {
   gl.drawArrays(gl.POINTS, 0, pointsCount);
   requestAnimationFrame(render);
 }
-  window.addEventListener("resize", () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gl.viewport(0, 0, canvas.width, canvas.height);
-  });
-  window.dispatchEvent(new Event("resize"));
-  gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
-  render();
-}
-startReliefApp();
+
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  gl.viewport(0, 0, canvas.width, canvas.height);
+});
+
+window.dispatchEvent(new Event("resize"));
+gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
+render();
 
 
 
