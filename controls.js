@@ -1,19 +1,17 @@
 // controls.js
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
-
-let camPos = new THREE.Vector3(0, 0, 70);
-let camPosTarget = camPos.clone();
-let camYaw = 0;
-let camPitch = 0;
-const camPitchLimit = Math.PI / 2 - 0.1;
+let camPos = [0, 0, 70];
+let camYaw = 0, camPitch = 0;
+let camPosTarget = [...camPos];
+const camPitchLimit = Math.PI / 2 - 0.01;
 const moveSpeed = 0.5;
 const camMouseSensitivity = 0.003;
 const keys = {};
+
+let mousePos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 let isDragging = false;
 let lastMouse = { x: 0, y: 0 };
-let mousePos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
-export function setupControls({ canvas }) {
+function setupControls(canvas) {
   window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
   window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
@@ -22,10 +20,12 @@ export function setupControls({ canvas }) {
     lastMouse = { x: e.clientX, y: e.clientY };
     canvas.style.cursor = "grabbing";
   });
+
   canvas.addEventListener("mouseup", () => {
     isDragging = false;
     canvas.style.cursor = "grab";
   });
+
   canvas.addEventListener("mousemove", e => {
     mousePos = { x: e.clientX, y: e.clientY };
     if (isDragging) {
@@ -40,59 +40,89 @@ export function setupControls({ canvas }) {
 
   canvas.addEventListener("wheel", e => {
     e.preventDefault();
-    const zoomAmount = -e.deltaY * 0.1;
-    const dir = getDirectionVector();
-    camPosTarget.add(dir.multiplyScalar(zoomAmount));
+    const zoom = -e.deltaY * 0.1;
+    const fx = Math.cos(camPitch) * Math.sin(camYaw);
+    const fy = Math.sin(camPitch);
+    const fz = Math.cos(camPitch) * Math.cos(camYaw);
+    camPosTarget[0] += fx * zoom;
+    camPosTarget[1] += fy * zoom;
+    camPosTarget[2] += fz * zoom;
   }, { passive: false });
 }
 
-export function moveCamera() {
-  const forward = new THREE.Vector3(Math.cos(camPitch) * Math.sin(camYaw), 0, Math.cos(camPitch) * Math.cos(camYaw)).normalize();
-  const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+function moveCamera() {
+  const forward = [Math.cos(camPitch)*Math.sin(camYaw), 0, Math.cos(camPitch)*Math.cos(camYaw)];
+  const right = [Math.sin(camYaw - Math.PI/2), 0, Math.cos(camYaw - Math.PI/2)];
 
-  if (keys['w']) camPosTarget.add(forward.clone().multiplyScalar(moveSpeed));
-  if (keys['s']) camPosTarget.add(forward.clone().multiplyScalar(-moveSpeed));
-  if (keys['a']) camPosTarget.add(right.clone().multiplyScalar(-moveSpeed));
-  if (keys['d']) camPosTarget.add(right.clone().multiplyScalar(moveSpeed));
-  if (keys[' ']) camPosTarget.y += moveSpeed;
-  if (keys['shift']) camPosTarget.y -= moveSpeed;
+  if (keys['w']) { camPosTarget[0] += forward[0]*moveSpeed; camPosTarget[2] += forward[2]*moveSpeed; }
+  if (keys['s']) { camPosTarget[0] -= forward[0]*moveSpeed; camPosTarget[2] -= forward[2]*moveSpeed; }
+  if (keys['a']) { camPosTarget[0] -= right[0]*moveSpeed; camPosTarget[2] -= right[2]*moveSpeed; }
+  if (keys['d']) { camPosTarget[0] += right[0]*moveSpeed; camPosTarget[2] += right[2]*moveSpeed; }
+  if (keys[' ']) camPosTarget[1] += moveSpeed;
+  if (keys['shift']) camPosTarget[1] -= moveSpeed;
 
-  camPos.lerp(camPosTarget, 0.1);
-}
-
-export function getCameraMatrix() {
-  const dir = getDirectionVector();
-  const center = camPos.clone().add(dir);
-  return {
-    position: camPos.toArray(),
-    center: center.toArray(),
-    up: [0, 1, 0]
-  };
-}
-
-function getDirectionVector() {
-  return new THREE.Vector3(
-    Math.cos(camPitch) * Math.sin(camYaw),
-    Math.sin(camPitch),
-    Math.cos(camPitch) * Math.cos(camYaw)
-  );
+  for (let i = 0; i < 3; i++) {
+    camPosTarget[i] = Math.min(200, Math.max(-200, camPosTarget[i]));
+    camPos[i] += (camPosTarget[i] - camPos[i]) * 0.1;
+  }
 }
 
 const edgeSize = 150;
 const autoLookSpeed = 0.02;
 
-export function autoRotateByMouse() {
+function autoRotateByMouse() {
   if (isDragging) return;
-
   if (mousePos.x < edgeSize)
     camYaw += autoLookSpeed * ((edgeSize - mousePos.x) / edgeSize);
   else if (mousePos.x > window.innerWidth - edgeSize)
     camYaw -= autoLookSpeed * ((mousePos.x - (window.innerWidth - edgeSize)) / edgeSize);
-
   if (mousePos.y < edgeSize)
     camPitch += autoLookSpeed * ((edgeSize - mousePos.y) / edgeSize);
   else if (mousePos.y > window.innerHeight - edgeSize)
     camPitch -= autoLookSpeed * ((mousePos.y - (window.innerHeight - edgeSize)) / edgeSize);
-
   camPitch = Math.max(-camPitchLimit, Math.min(camPitch, camPitch));
 }
+
+function createViewMatrix(pos = camPos, yaw = camYaw, pitch = camPitch) {
+  const cx = Math.cos(pitch) * Math.sin(yaw);
+  const cy = Math.sin(pitch);
+  const cz = Math.cos(pitch) * Math.cos(yaw);
+  return lookAt(pos, [pos[0]+cx, pos[1]+cy, pos[2]+cz], [0,1,0]);
+}
+
+// Dependencia: lookAt
+function normalize(v) {
+  const len = Math.hypot(...v);
+  return v.map(x => x / len);
+}
+function subtract(a, b) {
+  return a.map((x, i) => x - b[i]);
+}
+function cross(a, b) {
+  return [
+    a[1]*b[2] - a[2]*b[1],
+    a[2]*b[0] - a[0]*b[2],
+    a[0]*b[1] - a[1]*b[0]
+  ];
+}
+function dot(a, b) {
+  return a.reduce((sum, x, i) => sum + x * b[i], 0);
+}
+function lookAt(eye, center, up) {
+  const f = normalize(subtract(center, eye));
+  const s = normalize(cross(f, up));
+  const u = cross(s, f);
+  return new Float32Array([
+    s[0], u[0], -f[0], 0,
+    s[1], u[1], -f[1], 0,
+    s[2], u[2], -f[2], 0,
+    -dot(s, eye), -dot(u, eye), dot(f, eye), 1,
+  ]);
+}
+
+export {
+  setupControls,
+  moveCamera,
+  autoRotateByMouse,
+  createViewMatrix
+};
