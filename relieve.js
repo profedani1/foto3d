@@ -118,20 +118,23 @@ export default function startReliefApp() {
     };
   });
 
-  function render() {
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.DEPTH_TEST);
-moveCamera();
-moveCameraByMouseEdges();
-const camMat = createViewMatrix();
-    gl.uniformMatrix4fv(uMVMatrixLoc, false, camMat);
-    const pMatrix = perspectiveMatrix((45*Math.PI)/180, canvas.width/canvas.height, 0.1, 1000);
-    gl.uniformMatrix4fv(uPMatrixLoc, false, pMatrix);
-    gl.drawArrays(gl.POINTS, 0, pointsCount);
-    requestAnimationFrame(render);
-  }
+function render() {
+  gl.clearColor(0, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST);
 
+  moveCamera();
+  moveCameraByMouseEdges();
+
+  const camMat = createViewMatrix();
+  gl.uniformMatrix4fv(uMVMatrixLoc, false, camMat);
+
+  const pMatrix = perspectiveMatrix((45*Math.PI)/180, canvas.width/canvas.height, 0.1, 1000);
+  gl.uniformMatrix4fv(uPMatrixLoc, false, pMatrix);
+
+  gl.drawArrays(gl.POINTS, 0, pointsCount);
+  requestAnimationFrame(render);
+}
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -141,6 +144,7 @@ const camMat = createViewMatrix();
   gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
   render();
 }
+
 
 
 
