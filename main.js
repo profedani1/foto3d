@@ -1,7 +1,8 @@
 // main.js (modo solo relieve)
 
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js";
-import { createReliefScene } from "./relieve.js";
+import startReliefApp from './relieve.js';
+startReliefApp();
 
 // Variables globales
 let renderer, camera;
@@ -37,3 +38,4 @@ window.addEventListener("resize", () => {
 
 // Iniciar escena de relieve
 createReliefScene(renderer, camera, mousePos, keys);
+
