@@ -144,6 +144,8 @@ function render() {
   gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
   render();
 }
+startReliefApp();
+
 
 
 
