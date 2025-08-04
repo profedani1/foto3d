@@ -1,5 +1,5 @@
-// relieve.js
-import { setupControls, getCameraMatrix } from './controls.js';
+import { setupControls, moveCamera, autoRotateByMouse, createViewMatrix } from './controls.js';
+
 
 export default function startReliefApp() {
   const canvas = document.getElementById("glcanvas");
@@ -139,3 +139,4 @@ export default function startReliefApp() {
   gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
   render();
 }
+
