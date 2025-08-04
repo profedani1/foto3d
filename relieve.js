@@ -126,12 +126,12 @@ function render() {
   moveCamera();
   moveCameraByMouseEdges();
 
-  gl.useProgram(program); // ✅ NECESARIO antes de usar uniforms
+  gl.useProgram(program);
 
   const camMat = createViewMatrix();
   gl.uniformMatrix4fv(uMVMatrixLoc, false, camMat);
 
-  const pMatrix = perspectiveMatrix((45*Math.PI)/180, canvas.width/canvas.height, 0.1, 1000);
+  const pMatrix = perspectiveMatrix((45 * Math.PI) / 180, canvas.width / canvas.height, 0.1, 1000);
   gl.uniformMatrix4fv(uPMatrixLoc, false, pMatrix);
 
   gl.drawArrays(gl.POINTS, 0, pointsCount);
@@ -145,7 +145,11 @@ window.addEventListener("resize", () => {
 });
 
 window.dispatchEvent(new Event("resize"));
-render();} 
+render();
+}  // ← esta sí es la llave correcta que cierra `startReliefApp`
+
+// Solo si no usas main.js, agrega esto también:
+startReliefApp();
 
 
 
