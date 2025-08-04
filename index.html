@@ -3,13 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>Pecera 3D con relieve</title>
+  <title>Relieve 3D desde imagen</title>
   <style>
-    body { margin: 0; overflow: hidden; background: black; font-family: Arial, sans-serif; color: white; }
-    canvas { display: block; cursor: grab; touch-action: none; }
-    canvas:active { cursor: grabbing; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+    canvas {
+      display: block;
+      cursor: grab;
+      touch-action: none;
+    }
+    canvas:active {
+      cursor: grabbing;
+    }
 
-    /* Overlays para rotación automática */
+    #relief-controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 8px;
+      z-index: 20;
+    }
+    #relief-controls input[type="file"],
+    #relief-controls input[type="range"] {
+      display: block;
+      margin-top: 4px;
+    }
+
     .edge-overlay {
       position: fixed;
       pointer-events: none;
@@ -35,57 +61,10 @@
       width: 100vw; height: 150px;
       background: linear-gradient(to top, rgba(0,255,255,0.3), transparent);
     }
-
-    /* Menú de selección de escena */
-    #menu {
-      position: fixed;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 20;
-      background: rgba(0,0,0,0.5);
-      padding: 8px 16px;
-      border-radius: 8px;
-    }
-    #menu select {
-      font-size: 16px;
-      background: black;
-      color: white;
-      border: 1px solid #888;
-      padding: 4px 8px;
-      border-radius: 4px;
-    }
-
-    /* Controles para relieve */
-    #relief-controls {
-      position: fixed;
-      top: 70px;
-      left: 10px;
-      background: rgba(0,0,0,0.5);
-      padding: 10px;
-      border-radius: 8px;
-      z-index: 20;
-    }
-    #relief-controls input[type="file"],
-    #relief-controls input[type="range"] {
-      display: block;
-      margin-top: 4px;
-    }
   </style>
 </head>
 <body>
 
-  <!-- Menú selección escena -->
-  <div id="menu">
-    <label for="scene-select">Escena:</label>
-    <select id="scene-select">
-      <option value="esfera" selected>Esfera</option>
-      <option value="cuadrado">Cuadrado</option>
-      <option value="relieve">Relieve</option>
-    </select>
-  </div>
-
-  <!-- Controles para escena de relieve -->
   <div id="relief-controls">
     <label>
       Cargar imagen:
@@ -97,13 +76,11 @@
     </label>
   </div>
 
-  <!-- Overlays para auto-rotación -->
   <div id="edge-left" class="edge-overlay"></div>
   <div id="edge-right" class="edge-overlay"></div>
   <div id="edge-top" class="edge-overlay"></div>
   <div id="edge-bottom" class="edge-overlay"></div>
 
-  <!-- Script principal -->
   <script type="module" src="main.js"></script>
 </body>
 </html>
