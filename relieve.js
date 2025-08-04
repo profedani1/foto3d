@@ -1,4 +1,4 @@
-import { setupControls, moveCamera, autoRotateByMouse, createViewMatrix } from './controls.js';
+import { setupControls, moveCamera, moveCameraByMouseEdges, createViewMatrix } from './controls.js';
 
 
 export default function startReliefApp() {
@@ -123,7 +123,7 @@ export default function startReliefApp() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
 moveCamera();
-autoRotateByMouse();
+moveCameraByMouseEdges();
 const camMat = createViewMatrix();
     gl.uniformMatrix4fv(uMVMatrixLoc, false, camMat);
     const pMatrix = perspectiveMatrix((45*Math.PI)/180, canvas.width/canvas.height, 0.1, 1000);
@@ -141,5 +141,6 @@ const camMat = createViewMatrix();
   gl.enable(gl.VERTEX_PROGRAM_POINT_SIZE);
   render();
 }
+
 
 
