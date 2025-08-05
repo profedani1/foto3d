@@ -146,10 +146,9 @@ window.addEventListener("resize", () => {
 
 window.dispatchEvent(new Event("resize"));
 render();
-}  // ← esta sí es la llave correcta que cierra `startReliefApp`
+} 
 
-// Solo si no usas main.js, agrega esto también:
-startReliefApp();
+
 
 
 
